@@ -1,3 +1,12 @@
+日本酒ECサイト 基本設計書（MVP / 1人開発）
+1. 目的・スコープ
+
+要件定義の「機能要件（高）」を1ヶ月で実装するための最小構成設計。
+
+Spring Boot + Thymeleaf + Maven、DBは開発H2/本番PostgreSQL or MySQL。
+
+2. 全体アーキテクチャ／フォルダ構成
+2.1 レイヤ構造
 Presentation(Controller, View) 
   → Application(Service, UseCase)
     → Domain(Entity, Domain Service) 
