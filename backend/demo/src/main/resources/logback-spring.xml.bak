@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+  <!-- 環境変数/プロパティ -->
+  <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+  <property name="APP_NAME" value="${spring.application.name:-ec-app}"/>
+
+  <!-- JSONフォーマット（コンソール） -->
+  <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp>
+          <timeZone>UTC</timeZone>
+        </timestamp>
+        <pattern>
+          <!-- message はそのまま -->
+          <pattern>{"message":"%escapeJson(%msg)"}</pattern>
+        </pattern>
+        <loggerName/>
+        <logLevel/>
+        <threadName/>
+        <mdc/> <!-- MDCを丸ごと吐く: requestId,userId,traceId など -->
+        <context>
+          <data>
+            <appName>${APP_NAME}</appName>
+          </data>
+        </context>
+        <stackTrace/>
+      </providers>
+    </encoder>
+  </appender>
+
+  <!-- JSONフォーマット（日毎ローテーション） -->
+  <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP_NAME}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>14</maxHistory>
+      <totalSizeCap>2GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp><timeZone>UTC</timeZone></timestamp>
+        <pattern>
+          <pattern>{"message":"%escapeJson(%msg)"}</pattern>
+        </pattern>
+        <loggerName/>
+        <logLevel/>
+        <threadName/>
+        <mdc/>
+        <context>
+          <data>
+            <appName>${APP_NAME}</appName>
+          </data>
+        </context>
+        <stackTrace/>
+      </providers>
+    </encoder>
+  </appender>
+
+  <!-- ルート -->
+  <root level="INFO">
+    <appender-ref ref="JSON_CONSOLE"/>
+    <appender-ref ref="JSON_FILE"/>
+  </root>
+
+  <!-- SQLなど騒がしいものを下げたいとき -->
+  <logger name="org.hibernate.SQL" level="WARN"/>
+
+
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp/>
+        <logLevel/>
+        <loggerName/>
+        <threadName/>
+        <message/>       <!-- メッセージは自動で JSON エスケープ -->
+        <mdc/>           <!-- MDC を出したい場合 -->
+        <stackTrace/>    <!-- 例外スタックトレース -->
+      </providers>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+</configuration>

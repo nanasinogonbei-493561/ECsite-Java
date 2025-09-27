@@ -1,0 +1,14 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    
+    "files.associations": {
+    "*.log": "json"
+    },
+    "search.useIgnoreFiles": true,
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/build": true,
+        "**/target": true
+    }
+}
