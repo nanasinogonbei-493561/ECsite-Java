@@ -1,5 +1,5 @@
 // src/main/java/com/example/ec/logging/MdcInjectionFilter.java
-package com.example.ec.logging;
+package com.example.sakeec.logging;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

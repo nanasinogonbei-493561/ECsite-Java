@@ -8,24 +8,11 @@ logging:
   file:
     path: logs   # LOG_DIR と揃えるならこちらを基準に
 
-logging: 
-structured:
-format: 
-console: logstash
-
-logging: 
-structured: 
-format: 
-file: logstash
-
 logging:
   structured:
-    json:
-      exclude: log.level
-      rename:
-        process.id: procid
-      add:
-        corpname: mycorp
+    format:
+      console: logstash
+      file: logstash
 
 logging:
   structured:
@@ -35,3 +22,5 @@ logging:
         max-length: 1024
         include-common-frames: true
         include-hashes: true
+
+        

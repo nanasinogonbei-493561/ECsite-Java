@@ -1,0 +1,27 @@
+<encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+    <providers>
+        <mdc/>
+        <pattern>
+            <pattern>
+                {
+                    "logger": "%logger",
+                    "level": "%level",
+                    "thread": "%thread",
+                    "message": "%message",
+                    "traceId": "%mdc{traceId}"
+                }
+            </pattern>
+        </pattern>
+        <stackTrace>
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                <maxLength>2048</maxLength>
+                <shortenedClassNameLength>20</shortenedClassNameLength>
+                <exclude>^sun\.reflect\..*\.invoke</exclude>
+                <exclude>^net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+                <evaluator class="myorg.MyCustomEvaluator"/>
+                <rootCauseFirst>true</rootCauseFirst>
+            </throwableConverter>
+        </stackTrace>
+    </providers>
+</encoder>

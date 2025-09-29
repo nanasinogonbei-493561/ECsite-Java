@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+  <!-- variables -->
+  <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+  <property name="APP_NAME" value="${spring.application.name:-ec-app}"/>
+
+  <!-- Console: JSON -->
+  <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp><timeZone>UTC</timeZone></timestamp>   <!-- 1) 正しい provider -->
+        <mdc/>                                           <!-- 2) MDC 全体 -->
+        <pattern>                                        <!-- 3) メッセージ系は pattern -->
+          <omitEmptyFields>true</omitEmptyFields>
+          <pattern>{
+            "logger":"%logger",
+            "level":"%level",
+            "thread":"%thread",
+            "message":"%message",
+            "traceId":"%mdc{traceId}"
+            "userId":"%mdc{userId}"
+          }</pattern>
+        </pattern>
+        <stackTrace/>                                    <!-- 4) patternの外に独立provider -->
+      </providers>
+    </encoder>
+  </appender>
+
+  <!-- File: JSON（Time+Sizeローテート） -->
+  <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/${APP_NAME}.json</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/${APP_NAME}-%d{yyyy-MM-dd}.%i.json</fileNamePattern>
+      <maxHistory>7</maxHistory>
+      <maxFileSize>50MB</maxFileSize>
+      <totalSizeCap>2GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp><timeZone>UTC</timeZone></timestamp>
+        <mdc/>
+        <pattern>
+          <omitEmptyFields>true</omitEmptyFields>
+          <pattern>{
+            "logger":"%logger",
+            "level":"%level",
+            "thread":"%thread",
+            "message":"%message",
+            "traceId":"%mdc{traceId}"
+          }</pattern>
+        </pattern>
+        <stackTrace/>
+      </providers>
+    </encoder>
+  </appender>
+
+  <!-- root: Console + File（※ここ以外に<root>や<appender>を重複定義しない） -->
+  <root level="INFO">
+    <appender-ref ref="JSON_CONSOLE"/>
+    <appender-ref ref="JSON_FILE"/>
+  </root>
+</configuration>
