@@ -81,7 +81,7 @@
 
 ### 3.1 技術スタック
 - **バックエンド**: Java 17 + Spring Boot 3.0
-- **フロントエンド**: Thymeleaf + Bootstrap 5（CDN使用）
+- **フロントエンド**: React19.1.1+TypeScript5.8.3
 - **データベース**: 
   - 開発環境: H2 Database
   - 本番環境: PostgreSQL（Render）またはMySQL（ConoHa VPS）
