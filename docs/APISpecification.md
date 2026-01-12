@@ -523,3 +523,97 @@ INVALID_CREDENTIALS：ログインのID/PW不一致
 | orderNumber   | string | 注文番号 |
 | totalAmount   | integer | 合計金額 |
 | status        | string | 注文処理のステータス |
+
+## 注文ステータス変更
+### PUT /api/admin/orders/{id}/status
+#### 基本情報
+ - エンドポイント: `/api/admin/orders/{id}/status`
+ - メソッド: PUT
+ - 概要: 注文した時のステータスを変更するAPI
+
+#### リクエスト
+##### パスパラメータ
+| 名称 | 型 | 必須 | 説明 |
+|--------|-----|------|-------------|
+| id | integer | 必須 | 更新対象の注文ID |
+
+#### ヘッダー
+| 名称 | 必須 | 説明 |
+|-------|-----|-------------|
+| Authorization | 必須 | `Bearer <JWT>` |
+
+##### リクエストボディ(JSON)
+| フィールド名 | 型 | 必須 | 説明 |
+|------------|-------|--------|-------------|
+| status | string | 必須 | 注文した際のステータスの変更 |
+
+```json
+{
+    "status": "PENDING",
+    "status": "SHIPPED",
+    "status": "DELIVERED",
+    "status": "CANCELLED"
+}
+```
+enum
+PENDING | SHIPPED | DELIVERED | CANCELLED
+
+##### 状態偏移
+###### 許可
+ - PENDING -> SHIPPED
+ - PENDING -> CANCELLED
+ - SHIPPED -> DELIVERED
+それ以外: すべて拒否
+
+#### レスポンス
+##### 200 OK
+```json
+{
+  "id": 123,
+  "status": "SHIPPED",
+  "updatedAt": "2026-01-11T08:00:00+09:00"
+}
+```
+
+##### 400 Bad Request
+ - status不正(enum外、必須違反)
+```json
+ {
+    "message": "validation error",
+    "code": "VALIDATION_ERROR",
+    "traceId": "string",
+    "errors": {
+        "status": ["status is required"],
+    }
+ }
+```
+
+##### 401 Unauthorized
+ - 管理者認証NG
+```json
+ {
+    "message": "unauthorized",
+    "code": "UNAUTHORIZED",
+    "traceId": "string"
+ }
+ ```
+
+##### 404 Not Found
+ - 注文が存在しない
+ ```json
+ {
+    "message": "product not found",
+    "code": "NOT_FOUND",
+    "traceId": "string"
+ }
+ ```
+
+##### 409 Conflict
+ - 状態遷移違反
+```json
+{
+  "code": "INVALID_STATUS_TRANSITION",
+  "message": "Cannot change status from SHIPPED to CANCELLED",
+  "currentStatus": "SHIPPED"
+}
+```
