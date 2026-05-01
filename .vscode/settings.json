@@ -1,6 +1,6 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.updateBuildConfiguration": "automatic",
     
     "files.associations": {
     "*.log": "json"
@@ -10,5 +10,6 @@
         "**/node_modules": true,
         "**/build": true,
         "**/target": true
-    }
+    },
+    "snyk.advanced.autoSelectOrganization": true
 }
