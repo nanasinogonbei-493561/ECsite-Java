@@ -8,7 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -69,6 +72,36 @@ public class GlobalExceptionHandler {
                 kv("currentStatus", ex.getCurrentStatus()));
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ConflictErrorResponse(ex.getCode(), ex.getMessage(), ex.getCurrentStatus()));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadable(HttpMessageNotReadableException ex) {
+        log.warn("MALFORMED_REQUEST",
+                kv("event", "BUSINESS_ERROR"),
+                kv("errorCode", "MALFORMED_REQUEST"),
+                kv("status", 400));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse("MALFORMED_REQUEST", "request body is malformed", traceId()));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex) {
+        log.warn("UNSUPPORTED_MEDIA_TYPE",
+                kv("event", "BUSINESS_ERROR"),
+                kv("errorCode", "UNSUPPORTED_MEDIA_TYPE"),
+                kv("status", 415));
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(new ErrorResponse("UNSUPPORTED_MEDIA_TYPE", "content-type not supported", traceId()));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        log.warn("METHOD_NOT_ALLOWED",
+                kv("event", "BUSINESS_ERROR"),
+                kv("errorCode", "METHOD_NOT_ALLOWED"),
+                kv("status", 405));
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(new ErrorResponse("METHOD_NOT_ALLOWED", "http method not allowed", traceId()));
     }
 
     @ExceptionHandler(BusinessException.class)
