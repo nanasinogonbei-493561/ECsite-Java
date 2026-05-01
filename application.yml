@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: ec-app
+logging:
+  level:
+    root: INFO
+    com.example.ec: INFO
+  file:
+    path: logs   # LOG_DIR と揃えるならこちらを基準に

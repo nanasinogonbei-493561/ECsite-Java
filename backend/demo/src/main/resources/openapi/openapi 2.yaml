@@ -1,0 +1,539 @@
+openapi: 3.0.3
+info:
+  title: Sake EC API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: integer
+        imageUrl:
+          type: string
+    OrderItem:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: integer
+        quantity:
+          type: integer
+    Customer:
+      type: object
+      required:
+        - name
+        - email
+        - address
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+    OrderRequest:
+      type: object
+      required:
+        - items
+        - customer
+        - paymentMethod
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        paymentMethod:
+          type: string
+          enum:
+            - COD
+    OrderResponse:
+      type: object
+      required:
+        - orderNumber
+        - totalAmount
+        - status
+      properties:
+        orderNumber:
+          type: string
+        totalAmount:
+          type: integer
+        status:
+          type: string
+    AdminLoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    AdminLoginResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    AdminLogoutResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    AdminOrderStatusUpdateRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - PENDING
+            - SHIPPED
+            - DELIVERED
+            - CANCELLED
+    AdminOrderStatusUpdateResponse:
+      type: object
+      required:
+        - id
+        - status
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum:
+            - PENDING
+            - SHIPPED
+            - DELIVERED
+            - CANCELLED
+        updatedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required:
+        - message
+        - code
+        - traceId
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        traceId:
+          type: string
+    ValidationErrorResponse:
+      type: object
+      required:
+        - message
+        - code
+        - traceId
+        - errors
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        traceId:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    ConflictErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - currentStatus
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        currentStatus:
+          type: string
+          enum:
+            - PENDING
+            - SHIPPED
+            - DELIVERED
+            - CANCELLED
+  responses:
+    ValidationError:
+      description: Bad Request(validation error)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+          example:
+            message: validation error
+            code: VALIDATION_ERROR
+            traceId: string
+            errors:
+              field:
+                - reason
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: unauthorized
+            code: UNAUTHORIZED
+            traceId: string
+    NotFoundProduct:
+      description: Product not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: product not found
+            code: NOT_FOUND
+            traceId: string
+    NotFoundOrder:
+      description: Order not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: order not found
+            code: NOT_FOUND
+            traceId: string
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: internal server error
+            code: INTERNAL_ERROR
+            traceId: string
+    ConflictInvalidStatus:
+      description: Invalid status transition
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConflictErrorResponse'
+          example:
+            code: INVALID_STATUS_TRANSITION
+            message: Cannot change status from SHIPPED to CANCELLED
+            currentStatus: SHIPPED
+
+paths:
+  /api/products:
+    get:
+      summary: 商品一覧取得
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 商品名の部分一致検索
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 30
+          description: 取得件数(未指定時30、最大30)
+      responses:
+        '200':
+          description: 商品一覧取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /api/products/{id}:
+    get:
+      summary: 商品詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 商品取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFoundProduct'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/orders:
+    post:
+      summary: 注文登録
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '201':
+          description: 注文登録成功
+          headers:
+            Location:
+              schema:
+                type: string
+              description: /api/orders/{orderNumber}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /api/admin/login:
+    post:
+      summary: 管理人ログイン
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminLoginRequest'
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminLoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/admin/logout:
+    post:
+      summary: 管理人ログアウト
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: ログアウト成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminLogoutResponse'
+              example:
+                message: logged out
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/admin/products:
+    get:
+      summary: 商品一覧取得(管理)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: 商品名の部分一致検索
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 30
+          description: 取得件数(未指定時30、最大30)
+      responses:
+        '200':
+          description: 商品一覧取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      summary: 商品登録(管理)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+              properties:
+                name:
+                  type: string
+                price:
+                  type: integer
+                imageUrl:
+                  type: string
+      responses:
+        '201':
+          description: 商品登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/admin/products/{id}:
+    put:
+      summary: 商品更新(管理)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+              properties:
+                name:
+                  type: string
+                price:
+                  type: integer
+                imageUrl:
+                  type: string
+      responses:
+        '200':
+          description: 商品更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundProduct'
+    delete:
+      summary: 商品削除(管理)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: 商品削除成功
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundProduct'
+
+  /api/admin/orders:
+    get:
+      summary: 注文一覧取得(管理)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 注文一覧取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/admin/orders/{id}/status:
+    put:
+      summary: 注文ステータス変更(管理)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminOrderStatusUpdateRequest'
+      responses:
+        '200':
+          description: 注文ステータス更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderStatusUpdateResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFoundOrder'
+        '409':
+          $ref: '#/components/responses/ConflictInvalidStatus'
