@@ -1,49 +1,94 @@
-// src/main/java/com/example/ec/logging/MdcInjectionFilter.java
 package com.example.sakeec.logging;
 
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
 
+import static net.logstash.logback.argument.StructuredArguments.kv;
+
+/**
+ * 全リクエストに traceId と関連メタ情報を MDC で付与し、
+ * 完了時にアクセスログを 1 行出力する。
+ * 例外は GlobalExceptionHandler が拾う前に finally でログ化されるよう、
+ * Spring 標準の例外解決より前段で動く。
+ */
 @Slf4j
 @Component
-@Order(Integer.MIN_VALUE)
-public class MdcInjectionFilter implements Filter {
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class MdcInjectionFilter extends OncePerRequestFilter {
+
+    public static final String TRACE_ID_HEADER = "X-Trace-Id";
+    public static final String TRACE_ID_KEY    = "traceId";
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws IOException, ServletException {
 
-        String requestId = UUID.randomUUID().toString();
-        HttpServletRequest req = (HttpServletRequest) request;
+        long start = System.currentTimeMillis();
+
+        String traceId = request.getHeader(TRACE_ID_HEADER);
+        if (traceId == null || traceId.isBlank()) {
+            traceId = UUID.randomUUID().toString();
+        }
+
+        MDC.put(TRACE_ID_KEY, traceId);
+        MDC.put("method",     request.getMethod());
+        MDC.put("path",       request.getRequestURI());
+        if (request.getQueryString() != null) {
+            MDC.put("query", request.getQueryString());
+        }
+        MDC.put("clientIp",  resolveClientIp(request));
+        String ua = request.getHeader("User-Agent");
+        if (ua != null) MDC.put("userAgent", ua);
+        MDC.put("userId",
+                request.getUserPrincipal() != null ? request.getUserPrincipal().getName() : "anonymous");
+
+        response.setHeader(TRACE_ID_HEADER, traceId);
 
         try {
-            MDC.put("requestId", requestId);
-            MDC.put("method", req.getMethod());
-            MDC.put("path", req.getRequestURI());
-            MDC.put("query", req.getQueryString());
-            MDC.put("clientIp", getClientIp(req));
-            MDC.put("userAgent", req.getHeader("User-Agent"));
-
-            // 認証済ユーザIDが取れる場合の例（Spring Security等）
-            String userId = (req.getUserPrincipal() != null) ? req.getUserPrincipal().getName() : "anonymous";
-            MDC.put("userId", userId);
-
             chain.doFilter(request, response);
         } finally {
+            long durationMs = System.currentTimeMillis() - start;
+            int status = response.getStatus();
+            // status を MDC にも入れて他のログとの相関を取りやすくする
+            MDC.put("status", String.valueOf(status));
+
+            if (status >= 500) {
+                log.error("REQUEST_COMPLETED",
+                        kv("event", "REQUEST_COMPLETED"),
+                        kv("status", status),
+                        kv("durationMs", durationMs));
+            } else if (status >= 400) {
+                log.warn("REQUEST_COMPLETED",
+                        kv("event", "REQUEST_COMPLETED"),
+                        kv("status", status),
+                        kv("durationMs", durationMs));
+            } else {
+                log.info("REQUEST_COMPLETED",
+                        kv("event", "REQUEST_COMPLETED"),
+                        kv("status", status),
+                        kv("durationMs", durationMs));
+            }
             MDC.clear();
         }
     }
 
-    private String getClientIp(HttpServletRequest req) {
+    private String resolveClientIp(HttpServletRequest req) {
         String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) return xff.split(",")[0].trim();
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
         return req.getRemoteAddr();
     }
 }

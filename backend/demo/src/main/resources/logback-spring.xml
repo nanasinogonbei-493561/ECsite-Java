@@ -1,63 +1,139 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true">
 
-  <!-- variables -->
-  <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
-  <property name="APP_NAME" value="${spring.application.name:-ec-app}"/>
+    <property name="LOG_DIR"  value="${LOG_DIR:-logs}"/>
+    <property name="APP_NAME" value="${spring.application.name:-sakeec}"/>
+    <property name="APP_ENV"  value="${APP_ENV:-dev}"/>
 
-  <!-- Console: JSON -->
-  <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-      <providers>
-        <timestamp><timeZone>UTC</timeZone></timestamp>   <!-- 1) 正しい provider -->
-        <mdc/>                                           <!-- 2) MDC 全体 -->
-        <pattern>                                        <!-- 3) メッセージ系は pattern -->
-          <omitEmptyFields>true</omitEmptyFields>
-          <pattern>{
-            "logger":"%logger",
-            "level":"%level",
-            "thread":"%thread",
-            "message":"%message",
-            "traceId":"%mdc{traceId}"
-            "userId":"%mdc{userId}"
-          }</pattern>
-        </pattern>
-        <stackTrace/>                                    <!-- 4) patternの外に独立provider -->
-      </providers>
-    </encoder>
-  </appender>
+    <!-- 共通エンコーダ定義 (Console / File で完全一致) -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <omitEmptyFields>true</omitEmptyFields>
+                    <pattern>
+                        {
+                          "app":     "${APP_NAME}",
+                          "env":     "${APP_ENV}",
+                          "level":   "%level",
+                          "logger":  "%logger",
+                          "thread":  "%thread",
+                          "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+                <!-- MDC を丸ごと展開: traceId / method / path / query / clientIp / userAgent / userId 等 -->
+                <mdc/>
+                <!-- StructuredArguments.kv(...) で渡された任意フィールド -->
+                <arguments/>
+                <!-- 例外スタックトレース -->
+                <stackTrace>
+                    <fieldName>stack_trace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+    </appender>
 
-  <!-- File: JSON（Time+Sizeローテート） -->
-  <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>${LOG_DIR}/${APP_NAME}.json</file>
-    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_DIR}/${APP_NAME}-%d{yyyy-MM-dd}.%i.json</fileNamePattern>
-      <maxHistory>7</maxHistory>
-      <maxFileSize>50MB</maxFileSize>
-      <totalSizeCap>2GB</totalSizeCap>
-    </rollingPolicy>
-    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-      <providers>
-        <timestamp><timeZone>UTC</timeZone></timestamp>
-        <mdc/>
-        <pattern>
-          <omitEmptyFields>true</omitEmptyFields>
-          <pattern>{
-            "logger":"%logger",
-            "level":"%level",
-            "thread":"%thread",
-            "message":"%message",
-            "traceId":"%mdc{traceId}"
-          }</pattern>
-        </pattern>
-        <stackTrace/>
-      </providers>
-    </encoder>
-  </appender>
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${APP_NAME}.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${APP_NAME}-%d{yyyy-MM-dd}.%i.json</fileNamePattern>
+            <maxHistory>14</maxHistory>
+            <maxFileSize>50MB</maxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <omitEmptyFields>true</omitEmptyFields>
+                    <pattern>
+                        {
+                          "app":     "${APP_NAME}",
+                          "env":     "${APP_ENV}",
+                          "level":   "%level",
+                          "logger":  "%logger",
+                          "thread":  "%thread",
+                          "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+                <mdc/>
+                <arguments/>
+                <stackTrace>
+                    <fieldName>stack_trace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+    </appender>
 
-  <!-- root: Console + File（※ここ以外に<root>や<appender>を重複定義しない） -->
-  <root level="INFO">
-    <appender-ref ref="JSON_CONSOLE"/>
-    <appender-ref ref="JSON_FILE"/>
-  </root>
+    <!-- エラー専用ファイル (level >= WARN のみ) -->
+    <appender name="JSON_ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${APP_NAME}-error.json</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${APP_NAME}-error-%d{yyyy-MM-dd}.%i.json</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>50MB</maxFileSize>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <fieldName>@timestamp</fieldName>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <omitEmptyFields>true</omitEmptyFields>
+                    <pattern>
+                        {
+                          "app":     "${APP_NAME}",
+                          "env":     "${APP_ENV}",
+                          "level":   "%level",
+                          "logger":  "%logger",
+                          "thread":  "%thread",
+                          "message": "%message"
+                        }
+                    </pattern>
+                </pattern>
+                <mdc/>
+                <arguments/>
+                <stackTrace>
+                    <fieldName>stack_trace</fieldName>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>50</maxDepthPerThrowable>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+    </appender>
+
+    <!-- 過剰ログ抑制 -->
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springframework.security" level="INFO"/>
+    <logger name="org.hibernate" level="WARN"/>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+        <appender-ref ref="JSON_FILE"/>
+        <appender-ref ref="JSON_ERROR_FILE"/>
+    </root>
 </configuration>
