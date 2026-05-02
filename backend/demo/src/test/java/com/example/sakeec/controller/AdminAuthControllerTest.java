@@ -3,6 +3,7 @@ package com.example.sakeec.controller;
 import com.example.sakeec.dto.AdminLoginResponse;
 import com.example.sakeec.exception.BusinessException;
 import com.example.sakeec.exception.GlobalExceptionHandler;
+import com.example.sakeec.security.JwtUtil;
 import com.example.sakeec.service.AdminService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,9 @@ class AdminAuthControllerTest {
     @Autowired private ObjectMapper om;
 
     @MockitoBean private AdminService adminService;
+    // @WebMvcTest は Filter 型 Bean (JwtAuthenticationFilter) も自動ロードするため、
+    // その依存である JwtUtil をモックで満たしておく
+    @MockitoBean private JwtUtil jwtUtil;
 
     @Test
     @DisplayName("正常: 200 と JWT トークン返却")

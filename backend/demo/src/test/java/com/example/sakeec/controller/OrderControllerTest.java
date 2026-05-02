@@ -3,6 +3,7 @@ package com.example.sakeec.controller;
 import com.example.sakeec.dto.OrderResponse;
 import com.example.sakeec.exception.GlobalExceptionHandler;
 import com.example.sakeec.exception.OutOfStockException;
+import com.example.sakeec.security.JwtUtil;
 import com.example.sakeec.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -32,6 +33,9 @@ class OrderControllerTest {
     @Autowired private ObjectMapper om;
 
     @MockitoBean private OrderService orderService;
+    // @WebMvcTest は Filter 型 Bean (JwtAuthenticationFilter) も自動ロードするため、
+    // その依存である JwtUtil をモックで満たしておく
+    @MockitoBean private JwtUtil jwtUtil;
 
     private String validBody() throws Exception {
         return om.writeValueAsString(Map.of(
