@@ -2,9 +2,11 @@ import { useEffect } from "react";
 import { useRoute, navigate } from "./router/Router";
 import { useAuth } from "./lib/auth/useAuth";
 import { LoginPage } from "./pages/LoginPage";
+import { AgeVerificationPage } from "./pages/AgeVerificationPage";
 import { AdminProductsPage } from "./pages/AdminProductsPage";
 import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminLayout } from "./components/AdminLayout";
+import { isAgeVerified } from "./lib/ageVerification";
 
 export default function App() {
   const route = useRoute();
@@ -19,9 +21,18 @@ export default function App() {
    * というバグを踏むため。
    */
   useEffect(() => {
+    // 年齢確認ページ自体は誰でも開ける（リダイレクト対象外）
+    if (route === "/age-verification") return;
+
     // hash が空 (起動直後) ならデフォルトに振り分け
     if (route === "/" || route === "") {
-      navigate(auth.isAuthenticated ? "/admin/products" : "/login");
+      if (auth.isAuthenticated) {
+        navigate("/admin/products");
+      } else if (!isAgeVerified()) {
+        navigate("/age-verification");
+      } else {
+        navigate("/login");
+      }
       return;
     }
     // 認証済みなのにログイン画面に来たら管理画面へ
@@ -37,6 +48,10 @@ export default function App() {
   }, [route, auth.isAuthenticated]);
 
   // ===== レンダー: 副作用は呼ばない =====
+
+  if (route === "/age-verification") {
+    return <AgeVerificationPage />;
+  }
 
   if (route === "/login") {
     // 認証済みのケースは useEffect が遷移させる。一瞬ここを通る可能性はあるが

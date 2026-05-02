@@ -60,6 +60,15 @@ a:hover { text-decoration: underline; }
 }
 .login-title { margin: 0 0 24px; font-size: 18px; text-align: center; }
 
+/* ===== 年齢確認 (生年月日3列) ===== */
+.dob-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.dob-grid .field { margin-bottom: 0; }
+
 /* ===== 管理画面シェル ===== */
 .admin-shell { display: flex; flex-direction: column; min-height: 100vh; }
 .admin-header {
