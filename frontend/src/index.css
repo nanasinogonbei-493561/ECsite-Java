@@ -147,6 +147,73 @@ a:hover { text-decoration: underline; }
 .status-delivered { background: #d1fae5; color: #065f46; }
 .status-cancelled { background: #fee2e2; color: #991b1b; }
 
+/* ===== トップ (商品一覧) ===== */
+.top-shell { display: flex; flex-direction: column; min-height: 100vh; }
+.top-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.top-brand { font-weight: bold; font-size: 18px; letter-spacing: 0.04em; }
+.top-age-reset { font-size: 12px; padding: 4px 10px; }
+
+.top-main { padding: 24px; max-width: 1200px; width: 100%; margin: 0 auto; }
+.top-title { margin: 0 0 16px; font-size: 22px; }
+
+.top-search {
+  display: flex; gap: 8px; margin-bottom: 20px;
+}
+.top-search input[type="search"] {
+  flex: 1; max-width: 360px;
+  padding: 8px 10px; border: 1px solid var(--color-border);
+  border-radius: 4px; font-size: 14px;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.product-card {
+  background: var(--color-surface);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.product-card-image-link { display: block; }
+.product-card-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: #f0f1f4;
+}
+.product-card-image--placeholder {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-muted); font-size: 13px;
+}
+.product-card-body {
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  flex: 1;
+}
+.product-card-name {
+  margin: 0; font-size: 14px; font-weight: 600; line-height: 1.4;
+}
+.product-card-name a { color: var(--color-text); }
+.product-card-name a:hover { color: var(--color-primary); text-decoration: none; }
+.product-card-meta {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 0;
+}
+.product-card-price { font-weight: bold; font-size: 16px; color: var(--color-text); }
+.product-card-volume { color: var(--color-text-muted); font-size: 13px; }
+.product-card-detail { margin-top: auto; align-self: stretch; }
+
 /* ===== ユーティリティ ===== */
 .error-text {
   color: var(--color-danger); background: #fee2e2;
