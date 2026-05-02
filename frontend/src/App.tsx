@@ -4,6 +4,7 @@ import { useAuth } from "./lib/auth/useAuth";
 import { LoginPage } from "./pages/LoginPage";
 import { AgeVerificationPage } from "./pages/AgeVerificationPage";
 import { TopPage } from "./pages/TopPage";
+import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { AdminProductsPage } from "./pages/AdminProductsPage";
 import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminLayout } from "./components/AdminLayout";
@@ -102,6 +103,11 @@ export default function App() {
     return <TopPage />;
   }
 
+  const productId = matchProductDetail(route);
+  if (productId != null) {
+    return <ProductDetailPage productId={productId} />;
+  }
+
   return (
     <div role="alert" style={{ padding: 24 }}>
       <h2>ページが見つかりません</h2>
@@ -109,4 +115,16 @@ export default function App() {
       <a href="#/">トップへ戻る</a>
     </div>
   );
+}
+
+/**
+ * "/products/123" → 123 を返す。マッチしない / 数値でない場合は null。
+ * クエリ文字列は無視する。
+ */
+function matchProductDetail(route: string): number | null {
+  const path = route.split("?")[0];
+  const m = /^\/products\/(\d+)$/.exec(path);
+  if (!m) return null;
+  const id = Number(m[1]);
+  return Number.isInteger(id) && id > 0 ? id : null;
 }
