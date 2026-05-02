@@ -124,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderResponse toResponse(Order o) {
-        return new OrderResponse(o.getOrderNumber(), o.getTotalAmount(), o.getStatus());
+        return new OrderResponse(o.getId(), o.getOrderNumber(), o.getTotalAmount(), o.getStatus());
     }
 
     private String generateOrderNumber() {

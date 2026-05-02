@@ -53,7 +53,7 @@ class OrderControllerTest {
     @DisplayName("正常: 201 Created と Location ヘッダ、body に orderNumber")
     void created() throws Exception {
         when(orderService.createOrder(any()))
-                .thenReturn(new OrderResponse("A26ABC123", new BigDecimal("6000.00"), "PENDING"));
+                .thenReturn(new OrderResponse(42L, "A26ABC123", new BigDecimal("6000.00"), "PENDING"));
 
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
