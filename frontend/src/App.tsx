@@ -6,6 +6,7 @@ import { AgeVerificationPage } from "./pages/AgeVerificationPage";
 import { TopPage } from "./pages/TopPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { OrderNewPage } from "./pages/OrderNewPage";
+import { OrderConfirmPage } from "./pages/OrderConfirmPage";
 import { AdminProductsPage } from "./pages/AdminProductsPage";
 import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminLayout } from "./components/AdminLayout";
@@ -112,6 +113,10 @@ export default function App() {
   const orderNew = matchOrderNew(route);
   if (orderNew) {
     return <OrderNewPage productId={orderNew.productId} initialQuantity={orderNew.quantity} />;
+  }
+
+  if (route.split("?")[0] === "/orders/confirm") {
+    return <OrderConfirmPage />;
   }
 
   return (

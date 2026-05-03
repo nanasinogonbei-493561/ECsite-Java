@@ -293,6 +293,15 @@ a:hover { text-decoration: underline; }
   font-size: 22px; font-weight: bold;
 }
 
+.confirm-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px; row-gap: 8px;
+  margin: 0; font-size: 14px;
+}
+.confirm-list dt { color: var(--color-text-muted); }
+.confirm-list dd { margin: 0; }
+
 /* ===== ユーティリティ ===== */
 .error-text {
   color: var(--color-danger); background: #fee2e2;
