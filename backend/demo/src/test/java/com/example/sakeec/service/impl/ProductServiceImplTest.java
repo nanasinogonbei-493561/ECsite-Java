@@ -113,19 +113,36 @@ class ProductServiceImplTest {
     }
 
     @Test
-    @DisplayName("create: 初期在庫は 0 で保存される（在庫増加は別経路）")
-    void createInitialStockZero() {
+    @DisplayName("create: stockQuantity 未指定 (null) なら 0 で保存される")
+    void createWithoutStockDefaultsToZero() {
         when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
             Product p = inv.getArgument(0);
             p.setId(1L);
             return p;
         });
 
-        var res = service.create(new AdminProductRequest("酒A", new BigDecimal("1500"), "/img/a.jpg"));
+        var res = service.create(new AdminProductRequest("酒A", new BigDecimal("1500"), "/img/a.jpg", null));
 
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository).save(captor.capture());
         assertThat(captor.getValue().getStockQuantity()).isEqualTo(0);
         assertThat(res.stockQuantity()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("create: stockQuantity 指定時はその値で保存される")
+    void createWithStock() {
+        when(productRepository.save(any(Product.class))).thenAnswer(inv -> {
+            Product p = inv.getArgument(0);
+            p.setId(1L);
+            return p;
+        });
+
+        var res = service.create(new AdminProductRequest("酒A", new BigDecimal("1500"), "/img/a.jpg", 12));
+
+        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(captor.capture());
+        assertThat(captor.getValue().getStockQuantity()).isEqualTo(12);
+        assertThat(res.stockQuantity()).isEqualTo(12);
     }
 }

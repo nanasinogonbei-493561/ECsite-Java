@@ -47,7 +47,7 @@ public class ProductServiceImpl implements ProductService {
         product.setName(request.name());
         product.setPrice(request.price());
         product.setImagePath(request.imageUrl());
-        product.setStockQuantity(0);
+        product.setStockQuantity(request.stockQuantity() != null ? request.stockQuantity() : 0);
         return toResponse(productRepository.save(product));
     }
 
@@ -59,6 +59,9 @@ public class ProductServiceImpl implements ProductService {
         product.setName(request.name());
         product.setPrice(request.price());
         product.setImagePath(request.imageUrl());
+        if (request.stockQuantity() != null) {
+            product.setStockQuantity(request.stockQuantity());
+        }
         return toResponse(productRepository.save(product));
     }
 

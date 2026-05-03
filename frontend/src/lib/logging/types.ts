@@ -25,7 +25,16 @@ export type LogEvent =
   // ユーザ操作 / ライフサイクル
   | "USER_ACTION"
   | "PAGE_VIEW"
-  | "APP_BOOT";
+  | "APP_BOOT"
+  // 顧客フロー (年齢確認 / 商品 / 注文)
+  | "AGE_VERIFICATION_SUCCEEDED"
+  | "AGE_VERIFICATION_FAILED"
+  | "PRODUCTS_LOADED"
+  | "PRODUCT_VIEWED"
+  | "ORDER_INPUT_SUBMITTED"
+  | "ORDER_INPUT_INVALID"
+  | "ORDER_CREATED"
+  | "ORDER_COMPLETE_VIEWED";
 
 /**
  * 1行分のログレコード。出力時はこれをそのまま JSON.stringify する。

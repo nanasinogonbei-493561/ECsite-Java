@@ -53,6 +53,8 @@ export interface AdminProductRequest {
   name: string;
   price: number;
   imageUrl?: string;
+  /** 在庫数 (0 以上)。未指定時、サーバ側は 0 として扱う。 */
+  stockQuantity?: number;
 }
 
 export interface AdminOrderStatusUpdateRequest {

@@ -3,7 +3,7 @@ import { ApiError, createOrder } from "../lib/api";
 import { logger } from "../lib/logging";
 import { navigate } from "../router/Router";
 import { toUserMessage } from "../components/errorMessage";
-import { clearOrderDraft, loadOrderDraft, type OrderDraft } from "../lib/orderDraft";
+import { clearOrderDraft, loadOrderDraft } from "../lib/orderDraft";
 
 /**
  * 基本設計書 3.1 / 5.2:
@@ -12,7 +12,8 @@ import { clearOrderDraft, loadOrderDraft, type OrderDraft } from "../lib/orderDr
  *   在庫不足 (OUT_OF_STOCK) は明示メッセージを出して入力画面に戻す。
  */
 export function OrderConfirmPage() {
-  const [draft, setDraft] = useState<OrderDraft | null>(() => loadOrderDraft());
+  // draft は確定後に clear するだけで途中で書き換えないので useMemo で十分。
+  const [draft] = useState(() => loadOrderDraft());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

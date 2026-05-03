@@ -20,7 +20,7 @@ type FormMode =
   | { kind: "create" }
   | { kind: "edit"; product: ProductResponse };
 
-const emptyForm: AdminProductRequest = { name: "", price: 0, imageUrl: "" };
+const emptyForm: AdminProductRequest = { name: "", price: 0, imageUrl: "", stockQuantity: 0 };
 
 export function AdminProductsPage({ auth }: Props) {
   const [products, setProducts] = useState<ProductResponse[]>([]);
@@ -29,6 +29,11 @@ export function AdminProductsPage({ auth }: Props) {
   const [query, setQuery] = useState("");
   const [mode, setMode] = useState<FormMode>({ kind: "idle" });
   const [form, setForm] = useState<AdminProductRequest>(emptyForm);
+  // 価格・在庫は <input type="number"> の特性上、数値で直接バインドすると
+  // 「初期 0 が消せない」「桁の途中状態 (空欄, '1.', '12e' 等) を保持できない」
+  // ため、編集中は文字列バッファで保持し submit 時に数値化する。
+  const [priceInput, setPriceInput] = useState("");
+  const [stockInput, setStockInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleAuthError = useCallback((e: unknown) => {
@@ -60,33 +65,52 @@ export function AdminProductsPage({ auth }: Props) {
   const startCreate = () => {
     setMode({ kind: "create" });
     setForm(emptyForm);
+    setPriceInput("");
+    setStockInput("");
     setError(null);
   };
 
   const startEdit = (p: ProductResponse) => {
     setMode({ kind: "edit", product: p });
+    const priceNum = typeof p.price === "string" ? Number(p.price) : p.price;
     setForm({
       name: p.name,
-      price: typeof p.price === "string" ? Number(p.price) : p.price,
+      price: priceNum,
       imageUrl: p.imageUrl ?? "",
+      stockQuantity: p.stockQuantity,
     });
+    setPriceInput(String(priceNum));
+    setStockInput(String(p.stockQuantity));
     setError(null);
   };
 
   const cancelForm = () => {
     setMode({ kind: "idle" });
     setForm(emptyForm);
+    setPriceInput("");
+    setStockInput("");
   };
 
   const submit = async (ev: FormEvent) => {
     ev.preventDefault();
+    const price = Number(priceInput);
+    if (!Number.isFinite(price) || price < 0) {
+      setError("価格は 0 以上の数値で入力してください。");
+      return;
+    }
+    const stock = Number(stockInput);
+    if (!Number.isInteger(stock) || stock < 0) {
+      setError("在庫数は 0 以上の整数で入力してください。");
+      return;
+    }
+    const payload: AdminProductRequest = { ...form, price, stockQuantity: stock };
     setSubmitting(true);
     setError(null);
     try {
       if (mode.kind === "create") {
-        await adminCreateProduct(form);
+        await adminCreateProduct(payload);
       } else if (mode.kind === "edit") {
-        await adminUpdateProduct(mode.product.id, form);
+        await adminUpdateProduct(mode.product.id, payload);
       }
       cancelForm();
       await reload();
@@ -149,10 +173,26 @@ export function AdminProductsPage({ auth }: Props) {
             <span>価格 (円)</span>
             <input
               type="number"
+              inputMode="numeric"
               min={0}
               step={1}
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: Number(e.target.value) })}
+              value={priceInput}
+              onChange={(e) => setPriceInput(e.target.value)}
+              placeholder="例: 1800"
+              required
+              disabled={submitting}
+            />
+          </label>
+          <label className="field">
+            <span>在庫数</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={1}
+              value={stockInput}
+              onChange={(e) => setStockInput(e.target.value)}
+              placeholder="例: 10"
               required
               disabled={submitting}
             />
