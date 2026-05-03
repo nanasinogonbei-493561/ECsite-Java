@@ -17,11 +17,26 @@ export function toUserMessage(e: unknown): string {
       case "UNSUPPORTED_MEDIA_TYPE":    return "リクエスト形式が許可されていません。";
       case "METHOD_NOT_ALLOWED":        return "操作が許可されていません。";
     }
+    // 502/503/504 はゲートウェイ系。dev 環境では Vite proxy → バックエンド未起動の典型ケース。
+    if (e.status === 502 || e.status === 503 || e.status === 504) {
+      return "バックエンドサーバーに接続できません。バックエンドが起動しているかご確認ください。";
+    }
     if (e.status >= 500) return "サーバーで問題が発生しました。時間をおいて再度お試しください。";
     if (e.status === 401) return "セッションの有効期限が切れました。再度ログインしてください。";
+    // 業務エラー以外で backend が message を返していればそれを優先表示
+    const backendMessage = extractBackendMessage(e.responseBody);
+    if (backendMessage) return backendMessage;
     return "操作に失敗しました。";
   }
   return "通信に失敗しました。ネットワーク接続をご確認ください。";
+}
+
+function extractBackendMessage(body: unknown): string | undefined {
+  if (body && typeof body === "object" && "message" in body) {
+    const m = (body as { message: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  return undefined;
 }
 
 export function isUnauthorized(e: unknown): boolean {

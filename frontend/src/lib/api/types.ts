@@ -67,3 +67,25 @@ export interface AdminOrderStatusUpdateResponse {
   /** ISO8601 */
   updatedAt: string;
 }
+
+export interface AdminOrderDetailResponse {
+  id: number;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  deliveryAddress?: string;
+  totalAmount: string | number;
+  status: "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  /** ISO8601 */
+  createdAt: string;
+  items: AdminOrderDetailItem[];
+}
+
+export interface AdminOrderDetailItem {
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: string | number;
+  subtotal: string | number;
+}

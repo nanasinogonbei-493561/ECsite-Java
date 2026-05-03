@@ -10,6 +10,7 @@ import { ApiError } from "./apiClient";
 import { api, setAdminToken } from "./client";
 import { logger, setUserId } from "../logging";
 import type {
+  AdminOrderDetailResponse,
   AdminOrderStatusUpdateResponse,
   AdminProductRequest,
   OrderRequest,
@@ -162,6 +163,15 @@ export async function adminListOrders(status?: string): Promise<OrderResponse[]>
     return await api.get<OrderResponse[]>(path);
   } catch (e) {
     logDomainFailure("admin.orders.list", "管理: 注文一覧の取得に失敗しました", e, { status });
+    throw e;
+  }
+}
+
+export async function adminGetOrderDetail(id: number): Promise<AdminOrderDetailResponse> {
+  try {
+    return await api.get<AdminOrderDetailResponse>(`/admin/orders/${id}`);
+  } catch (e) {
+    logDomainFailure("admin.orders.detail", "管理: 注文詳細の取得に失敗しました", e, { id });
     throw e;
   }
 }

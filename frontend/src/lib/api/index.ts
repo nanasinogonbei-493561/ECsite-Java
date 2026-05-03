@@ -20,5 +20,6 @@ export {
   adminDeleteProduct,
   // 管理: 注文
   adminListOrders,
+  adminGetOrderDetail,
   adminUpdateOrderStatus,
 } from "./endpoints";

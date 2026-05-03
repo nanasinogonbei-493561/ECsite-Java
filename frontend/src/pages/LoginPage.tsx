@@ -61,6 +61,10 @@ export function LoginPage({ auth }: Props) {
         <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? "ログイン中…" : "ログイン"}
         </button>
+
+        <p style={{ marginTop: 16, textAlign: "center" }}>
+          <a href="#/">← ストア (顧客向け) を見る</a>
+        </p>
       </form>
     </div>
   );

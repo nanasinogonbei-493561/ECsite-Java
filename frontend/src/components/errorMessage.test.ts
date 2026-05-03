@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "../lib/api";
 import { isUnauthorized, toUserMessage } from "./errorMessage";
 
-function err(status: number, code?: string): ApiError {
-  return new ApiError(status, code, undefined, null, "test");
+function err(status: number, code?: string, body?: unknown): ApiError {
+  return new ApiError(status, code, undefined, body ?? null, "test");
 }
 
 describe("toUserMessage", () => {
@@ -14,9 +14,19 @@ describe("toUserMessage", () => {
     expect(toUserMessage(err(409, "OUT_OF_STOCK"))).toMatch(/在庫/);
   });
 
-  it("5xx は汎用メッセージ", () => {
-    expect(toUserMessage(err(500))).toMatch(/サーバー/);
-    expect(toUserMessage(err(503))).toMatch(/サーバー/);
+  it("500 は汎用 5xx メッセージ", () => {
+    expect(toUserMessage(err(500))).toMatch(/サーバーで問題/);
+  });
+
+  it("502/503/504 はバックエンド未起動を示すメッセージ", () => {
+    expect(toUserMessage(err(502))).toMatch(/接続できません/);
+    expect(toUserMessage(err(503))).toMatch(/接続できません/);
+    expect(toUserMessage(err(504))).toMatch(/接続できません/);
+  });
+
+  it("backend が message を返していれば未知の 4xx で表示する", () => {
+    const e = err(422, undefined, { code: "WHATEVER", message: "個別な業務エラー文言" });
+    expect(toUserMessage(e)).toBe("個別な業務エラー文言");
   });
 
   it("401 (errorCode なし) はセッション切れメッセージ", () => {

@@ -57,14 +57,19 @@ export function TopPage() {
     <div className="top-shell">
       <header className="top-header">
         <div className="top-brand">SakeEC</div>
-        <button
-          type="button"
-          className="btn btn-secondary top-age-reset"
-          onClick={onResetAge}
-          aria-label="年齢確認をやり直す"
-        >
-          年齢確認をやり直す
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <a href="#/login" className="btn btn-secondary top-age-reset">
+            管理者ログイン
+          </a>
+          <button
+            type="button"
+            className="btn btn-secondary top-age-reset"
+            onClick={onResetAge}
+            aria-label="年齢確認をやり直す"
+          >
+            年齢確認をやり直す
+          </button>
+        </div>
       </header>
 
       <main className="top-main">

@@ -302,6 +302,26 @@ a:hover { text-decoration: underline; }
 .confirm-list dt { color: var(--color-text-muted); }
 .confirm-list dd { margin: 0; }
 
+/* ===== 注文詳細 (管理画面 展開行) ===== */
+.detail-row > td {
+  background: #f9fafb;
+  padding: 16px 14px;
+}
+.order-detail-panel h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 720px) {
+  .order-detail-grid { grid-template-columns: 1fr; }
+}
+
 /* ===== 注文完了 ===== */
 .order-complete {
   max-width: 520px; margin: 24px auto;

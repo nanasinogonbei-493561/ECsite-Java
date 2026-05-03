@@ -1,5 +1,6 @@
 package com.example.sakeec.controller;
 
+import com.example.sakeec.dto.AdminOrderDetailResponse;
 import com.example.sakeec.dto.AdminOrderStatusUpdateRequest;
 import com.example.sakeec.dto.AdminOrderStatusUpdateResponse;
 import com.example.sakeec.dto.OrderResponse;
@@ -29,6 +30,11 @@ public class AdminOrderController {
     @GetMapping
     public ResponseEntity<List<OrderResponse>> list(@RequestParam(required = false) String status) {
         return ResponseEntity.ok(orderService.findAll(status));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AdminOrderDetailResponse> detail(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.findDetail(id));
     }
 
     @PutMapping("/{id}/status")

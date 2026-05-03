@@ -1,5 +1,6 @@
 package com.example.sakeec.service.impl;
 
+import com.example.sakeec.dto.AdminOrderDetailResponse;
 import com.example.sakeec.dto.AdminOrderStatusUpdateResponse;
 import com.example.sakeec.dto.OrderRequest;
 import com.example.sakeec.dto.OrderResponse;
@@ -103,6 +104,37 @@ public class OrderServiceImpl implements OrderService {
                 ? orderRepository.findByStatus(status)
                 : orderRepository.findAllByOrderByCreatedAtDesc();
         return orders.stream().map(this::toResponse).toList();
+    }
+
+    @Override
+    public AdminOrderDetailResponse findDetail(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("order not found: " + id));
+        List<AdminOrderDetailResponse.Item> items = orderItemRepository.findByOrderId(id).stream()
+                .map(oi -> {
+                    Product p = oi.getProduct();
+                    BigDecimal subtotal = oi.getUnitPrice().multiply(BigDecimal.valueOf(oi.getQuantity()));
+                    return new AdminOrderDetailResponse.Item(
+                            p.getId(),
+                            p.getName(),
+                            oi.getQuantity(),
+                            oi.getUnitPrice(),
+                            subtotal
+                    );
+                })
+                .toList();
+        return new AdminOrderDetailResponse(
+                order.getId(),
+                order.getOrderNumber(),
+                order.getCustomerName(),
+                order.getCustomerEmail(),
+                order.getCustomerPhone(),
+                order.getDeliveryAddress(),
+                order.getTotalAmount(),
+                order.getStatus(),
+                order.getCreatedAt(),
+                items
+        );
     }
 
     @Override
