@@ -5,6 +5,7 @@ import { LoginPage } from "./pages/LoginPage";
 import { AgeVerificationPage } from "./pages/AgeVerificationPage";
 import { TopPage } from "./pages/TopPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
+import { OrderNewPage } from "./pages/OrderNewPage";
 import { AdminProductsPage } from "./pages/AdminProductsPage";
 import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminLayout } from "./components/AdminLayout";
@@ -108,6 +109,11 @@ export default function App() {
     return <ProductDetailPage productId={productId} />;
   }
 
+  const orderNew = matchOrderNew(route);
+  if (orderNew) {
+    return <OrderNewPage productId={orderNew.productId} initialQuantity={orderNew.quantity} />;
+  }
+
   return (
     <div role="alert" style={{ padding: 24 }}>
       <h2>ページが見つかりません</h2>
@@ -127,4 +133,19 @@ function matchProductDetail(route: string): number | null {
   if (!m) return null;
   const id = Number(m[1]);
   return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+/**
+ * "/orders/new?productId=1&qty=2" → { productId: 1, quantity: 2 }
+ * productId が無い / 不正なら null。
+ */
+function matchOrderNew(route: string): { productId: number; quantity: number } | null {
+  const [path, qs = ""] = route.split("?");
+  if (path !== "/orders/new") return null;
+  const params = new URLSearchParams(qs);
+  const productId = Number(params.get("productId"));
+  if (!Number.isInteger(productId) || productId <= 0) return null;
+  const qtyRaw = Number(params.get("qty"));
+  const quantity = Number.isInteger(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
+  return { productId, quantity };
 }

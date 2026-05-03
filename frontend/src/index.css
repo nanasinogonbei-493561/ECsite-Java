@@ -117,7 +117,17 @@ a:hover { text-decoration: underline; }
   padding: 8px 10px; border: 1px solid var(--color-border);
   border-radius: 4px; font-size: 14px;
 }
-.field input:focus { outline: 2px solid var(--color-primary); outline-offset: -1px; }
+.field input:focus,
+.field select:focus,
+.field textarea:focus { outline: 2px solid var(--color-primary); outline-offset: -1px; }
+.field select,
+.field textarea {
+  padding: 8px 10px; border: 1px solid var(--color-border);
+  border-radius: 4px; font-size: 14px;
+  font-family: inherit;
+}
+.field textarea { resize: vertical; min-height: 72px; }
+.required-mark { color: var(--color-danger); margin-left: 2px; }
 .form-actions { display: flex; gap: 8px; margin-top: 12px; }
 
 /* ===== テーブル ===== */
@@ -261,6 +271,27 @@ a:hover { text-decoration: underline; }
 }
 .product-detail-actions { margin-top: 8px; }
 .product-detail-actions .btn { padding: 10px 20px; font-size: 15px; }
+
+/* ===== 注文フォーム ===== */
+.order-form { max-width: 720px; }
+.order-product h3 { margin-top: 0; font-size: 14px; color: var(--color-text-muted); }
+.order-product-row { display: flex; gap: 16px; align-items: flex-start; }
+.order-product-thumb {
+  width: 80px; height: 80px; object-fit: cover;
+  border-radius: 6px; background: #f0f1f4;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-muted); font-size: 11px;
+  flex-shrink: 0;
+}
+.order-product-thumb--placeholder { display: flex; }
+.order-product-name { margin: 0 0 4px; font-weight: 600; }
+
+.order-total {
+  display: flex; align-items: baseline; justify-content: space-between;
+}
+.order-total > strong {
+  font-size: 22px; font-weight: bold;
+}
 
 /* ===== ユーティリティ ===== */
 .error-text {
