@@ -7,6 +7,7 @@ import { TopPage } from "./pages/TopPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { OrderNewPage } from "./pages/OrderNewPage";
 import { OrderConfirmPage } from "./pages/OrderConfirmPage";
+import { OrderCompletePage } from "./pages/OrderCompletePage";
 import { AdminProductsPage } from "./pages/AdminProductsPage";
 import { AdminOrdersPage } from "./pages/AdminOrdersPage";
 import { AdminLayout } from "./components/AdminLayout";
@@ -119,6 +120,11 @@ export default function App() {
     return <OrderConfirmPage />;
   }
 
+  const completeOrderNumber = matchOrderComplete(route);
+  if (completeOrderNumber !== undefined) {
+    return <OrderCompletePage orderNumber={completeOrderNumber} />;
+  }
+
   return (
     <div role="alert" style={{ padding: 24 }}>
       <h2>ページが見つかりません</h2>
@@ -153,4 +159,17 @@ function matchOrderNew(route: string): { productId: number; quantity: number } |
   const qtyRaw = Number(params.get("qty"));
   const quantity = Number.isInteger(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
   return { productId, quantity };
+}
+
+/**
+ * "/orders/complete?orderNumber=A25000123" → "A25000123"
+ * パスは一致するが orderNumber が無い場合は null (画面側でリダイレクト処理)。
+ * パスが違えば undefined (ルーティング不一致)。
+ */
+function matchOrderComplete(route: string): string | null | undefined {
+  const [path, qs = ""] = route.split("?");
+  if (path !== "/orders/complete") return undefined;
+  const params = new URLSearchParams(qs);
+  const orderNumber = params.get("orderNumber");
+  return orderNumber && orderNumber.trim() ? orderNumber : null;
 }
