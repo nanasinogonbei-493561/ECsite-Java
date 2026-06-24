@@ -23,7 +23,7 @@ WEB_ROOT="/var/www/${APP_NAME}"   # React の配置先
 PUBLIC_PORT="8090"                # server-setup.sh の PUBLIC_PORT と揃える（表示用）
 
 FRONTEND_DIR="./frontend"         # React(Vite) プロジェクトのパス
-BACKEND_DIR="./backend"           # Spring Boot(Maven) プロジェクトのパス
+BACKEND_DIR="/Users/sugawara/Desktop/ECsite.java/backend/demo"           # Spring Boot(Maven) プロジェクトのパス
 # =======================================================================
 
 SSH_CMD="ssh -p ${SSH_PORT} ${SSH_USER}@${SERVER_IP}"
