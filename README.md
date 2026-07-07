@@ -153,3 +153,6 @@ docker compose up -d
 - [ER.drawio](docs/ER.drawio) — エンティティ関連図
 - [ClassDiagram.drawio](docs/ClassDiagram.drawio) — クラス図
 - [Wireframe.drawio](docs/Wireframe.drawio) — 画面ワイヤーフレーム
+
+デプロイ後のURL
+http://160.251.234.95:8090/
